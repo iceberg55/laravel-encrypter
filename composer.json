@@ -1,0 +1,45 @@
+{
+  "name": "ibf/laravel-encrypter",
+  "keywords": [
+    "laravel",
+    "lumen",
+    "source",
+    "encrypt",
+    "encryption",
+    "encrypter",
+    "encryptor",
+    "phpBolt"
+  ],
+  "type": "library",
+  "require": {
+    "php": ">=7.2.5",
+    "illuminate/console": "^6|^7|^8|^9|^10",
+    "illuminate/support": "^6|^7|^8|^9|^10",
+    "ext-bolt": "*"
+  },
+  "description": "Laravel Encrypter",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Iman Abbasi",
+      "email": "ilvlanAbbasi@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "ibf\\LaravelEncrypter\\": "src"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "ibf\\LaravelEncrypter\\LaravelEncryptServiceProvider"
+      ]
+    }
+  }
+}
+  
