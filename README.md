@@ -51,7 +51,7 @@ This command encrypts files and directories in `config/Laravel-encrypter.php` fi
 
 The default destination directory is `encrypted`. You can change it in `config/Laravel-encrypter.php` file.
 
-Also the default encryption key length is `6`. You can change it in `config/Laravel-encrypter.php` file. `6` is the recommended key length.
+Also the default encryption key length is `12`. You can change it in `config/Laravel-encrypter.php` file. `12` is the recommended key length.
 
 This command has these optional options:
 
@@ -59,7 +59,7 @@ This command has these optional options:
 |-------------|----------------------------------------------------------------------|-------------------------|
 | source      | Path(s) to encrypt                                                   | app,routes,public/a.php |
 | destination | Destination directory                                                | encrypted               |
-| keylength   | Encryption key length                                                | 6                       |
+| keylength   | Encryption key length                                                | 12                      |
 | force       | Force the operation to run when destination directory already exists |                         |
 
 ### Usage Examples

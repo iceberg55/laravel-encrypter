@@ -62,7 +62,7 @@ class LaravelEncryptCommand extends Command
             $destination = $this->option('destination');
         }
         if (empty($this->option('keylength'))) {
-            $keyLength = config('laravel-encrypter.key_length', 6);
+            $keyLength = config('laravel-encrypter.key_length', 12);
         } else {
             $keyLength = $this->option('keylength');
         }
