@@ -44,7 +44,7 @@ class LaravelEncryptCommand extends Command
         if (!extension_loaded('bolt')) {
             $this->error('Please install bolt.so https://phpBolt.com');
             $this->error('PHP Version ' . phpversion());
-            $this->error('INI file location ' . php_ini_scanned_files());
+            $this->error('INI file location ' . php_ini_loaded_file());
             $this->error('Extension dir: ' . ini_get('extension_dir'));
 
             return 1;
@@ -94,7 +94,7 @@ class LaravelEncryptCommand extends Command
             $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path($source)));
             foreach ($files as $file) {
                 $filePath = Str::replaceFirst(base_path(), '', $file->getRealPath());
-                self::encryptFile($filePath, $destination, $keyLength);
+                //self::encryptFile($filePath, $destination, $keyLength);
             }
         }
         $this->info('Encrypting Completed Successfully!');
