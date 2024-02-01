@@ -27,6 +27,7 @@ class LaravelEncryptServiceProvider extends ServiceProvider
 
         // Register hard-delete-expired artisan command
         $this->commands([
+            LaravelEncryptGenerateKeyCommand::class,
             LaravelEncryptCommand::class,
         ]);
     }

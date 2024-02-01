@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Exception;
 
 class LaravelEncryptCommand extends Command
 {
@@ -57,7 +58,15 @@ class LaravelEncryptCommand extends Command
             $this->error('  Bolt Installed: ' . $output . '                          ');
             $this->error('                                               ');
 
-            return 1;
+            //return 1;
+        }
+
+        if ($this->option('key')) {
+            $key = $this->option('key');
+        } else if( !empty(env('LARAVEL_ENCRYPTION_KEY')) ){
+            $key = env('LARAVEL_ENCRYPTION_KEY');
+        } else {
+            throw new Exception("You should generate encryption key before encrypt.");
         }
 
         if (empty($this->option('source'))) {
@@ -93,13 +102,13 @@ class LaravelEncryptCommand extends Command
 
             @File::makeDirectory($destination.'/'.File::dirname($source), 493, true);
             if (File::isFile($source)) {
-                self::encryptFile($source, $destination);
+                self::encryptFile($source, $destination, $key);
                 continue;
             }
             $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path($source)));
             foreach ($files as $file) {
                 $filePath = Str::replaceFirst(base_path(), '', $file->getRealPath());
-                self::encryptFile($filePath, $destination);
+                self::encryptFile($filePath, $destination, $key);
             }
         }
         $this->info('Encrypting Completed Successfully!');
@@ -135,16 +144,8 @@ class LaravelEncryptCommand extends Command
         return 0;
     }
 
-    private function encryptFile($filePath, $destination)
+    private function encryptFile($filePath, $destination, $key)
     {
-        if ($this->option('key')) {
-            $key = $this->option('key');
-        } else if( !empty(env('LARAVEL_ENCRYPTION_KEY')) ){
-            $key = env('LARAVEL_ENCRYPTION_KEY');
-        } else {
-            throw new Exception("You should generate encryption key before encrypt.");
-        }
-
         if (File::isDirectory(base_path($filePath))) {
             if (!File::exists(base_path($destination.$filePath))) {
                 File::makeDirectory(base_path("$destination/$filePath"), 493, true);
