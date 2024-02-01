@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Illuminate\Support\Facades\Artisan;
 
 class LaravelEncryptGenerateKeyCommand extends Command
 {
@@ -57,6 +58,9 @@ class LaravelEncryptGenerateKeyCommand extends Command
                 $envContent .= "LARAVEL_ENCRYPTION_KEY=$token\n";
             }
             file_put_contents($env, $envContent);
+
+            Artisan::call('config:cache');
+            Artisan::call('config:clear');
         } else {
             $this->error('.env not exist !');
         }

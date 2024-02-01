@@ -58,12 +58,12 @@ class LaravelEncryptCommand extends Command
             $this->error('  Bolt Installed: ' . $output . '                          ');
             $this->error('                                               ');
 
-            return 1;
+            //return 1;
         }
 
         if ($this->option('key')) {
             $key = $this->option('key');
-        } else if( !empty(env('LARAVEL_ENCRYPTION_KEY')) ){
+        } else if( env('LARAVEL_ENCRYPTION_KEY') ){
             $key = env('LARAVEL_ENCRYPTION_KEY');
         } else {
             throw new Exception("You should generate encryption key before encrypt.");
@@ -168,6 +168,11 @@ class LaravelEncryptCommand extends Command
 
         $fileContents = File::get(base_path($filePath));
 
+        if( str_contains($fileContents, 'bolt_decrypt( __FILE__ ,') ){
+            $this->warn("File $filePath is necrypted before.");
+            return;
+        }
+
         $prepend = "<?php
 bolt_decrypt( __FILE__ , '$key'); return 0;
 ##!!!##";
@@ -176,7 +181,8 @@ bolt_decrypt( __FILE__ , '$key'); return 0;
         if (!empty($matches[0])) {
             $fileContents = preg_replace($pattern, '', $fileContents);
         }
-        $cipher = bolt_encrypt($fileContents, $key);
+        //$cipher = bolt_encrypt($fileContents, $key);
+        $cipher = 111;
         File::isDirectory(dirname("$destination/$filePath")) or File::makeDirectory(dirname("$destination/$filePath"), 0755, true, true);
         File::put(base_path("$destination/$filePath"), $prepend.$cipher);
 
