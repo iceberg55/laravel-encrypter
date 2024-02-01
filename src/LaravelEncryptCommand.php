@@ -27,7 +27,7 @@ class LaravelEncryptCommand extends Command
                 { --source= : Path(s) to encrypt }
                 { --destination= : Destination directory }
                 { --force : Force the operation to run when destination directory already exists }
-                { --keylength= : Encryption key length }';
+                { --key= : Custom Encryption Key}';
     /**
      * The console command description.
      *
@@ -42,10 +42,20 @@ class LaravelEncryptCommand extends Command
     public function handle()
     {
         if (!extension_loaded('bolt')) {
-            $this->error('Please install bolt.so https://phpBolt.com');
-            $this->error('PHP Version ' . phpversion());
-            $this->error('INI file location ' . php_ini_loaded_file());
-            $this->error('Extension dir: ' . ini_get('extension_dir'));
+            $output = shell_exec('ls ' . ini_get('extension_dir') . ' | grep -i bolt.so');
+            if ($output === NULL) {
+                $output = "NO ";
+            } else {
+                $output = "Yes";
+            }
+
+            // Do not change spaces it all aligns perfectly when displayed
+            $this->error('                                               ');
+            $this->error('  Please install bolt.so https://phpBolt.com   ');
+            $this->error('  PHP Version '.phpversion(). '                            ');
+            $this->error('  Extension dir: '.ini_get('extension_dir') .'         ');
+            $this->error('  Bolt Installed: ' . $output . '                          ');
+            $this->error('                                               ');
 
             return 1;
         }
@@ -60,11 +70,6 @@ class LaravelEncryptCommand extends Command
             $destination = config('laravel-encrypter.destination', 'encrypted');
         } else {
             $destination = $this->option('destination');
-        }
-        if (empty($this->option('keylength'))) {
-            $keyLength = config('laravel-encrypter.key_length', 12);
-        } else {
-            $keyLength = $this->option('keylength');
         }
 
         if (!$this->option('force')
@@ -86,35 +91,67 @@ class LaravelEncryptCommand extends Command
                 return 1;
             }
 
-            @File::makeDirectory($destination . '/' . File::dirname($source), 493, true);
+            @File::makeDirectory($destination.'/'.File::dirname($source), 493, true);
             if (File::isFile($source)) {
-                self::encryptFile($source, $destination, $keyLength);
+                self::encryptFile($source, $destination);
                 continue;
             }
             $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path($source)));
             foreach ($files as $file) {
                 $filePath = Str::replaceFirst(base_path(), '', $file->getRealPath());
-                //self::encryptFile($filePath, $destination, $keyLength);
+                self::encryptFile($filePath, $destination);
             }
         }
         $this->info('Encrypting Completed Successfully!');
         $this->info("Destination directory: $destination");
 
+        if( $this->confirm('Are you want to replace encrypted files with sources?') ){
+            $keepPath = config('laravel-encrypter.keep_path', 'old');
+            File::deleteDirectory(base_path($keepPath));
+            File::makeDirectory(base_path($keepPath));
+
+            foreach ($sources as $source) {
+                if (File::isDirectory(base_path($source))) {
+                    File::moveDirectory(base_path($source), base_path("$keepPath/$source"));
+                } else {
+                    File::move(base_path($source), base_path("$keepPath/$source"));
+                }
+            }
+
+            foreach ($sources as $source) {
+                if (File::isDirectory(base_path($source))) {
+                    File::moveDirectory(base_path("$destination/$source"), base_path($source));
+                } else {
+                    File::move(base_path("$destination/$source"), base_path($source));
+                }
+            }
+            File::deleteDirectory(base_path($destination));
+
+            if( $this->confirm('Are you want to delete original sources?') ){
+                File::deleteDirectory(base_path($keepPath));
+            }
+        }
+
         return 0;
     }
 
-    private function encryptFile($filePath, $destination, $keyLength)
+    private function encryptFile($filePath, $destination)
     {
-        $key = Str::random($keyLength);
+        if ($this->option('key')) {
+            $key = $this->option('key');
+        } else if( !empty(env('LARAVEL_ENCRYPTION_KEY')) ){
+            $key = env('LARAVEL_ENCRYPTION_KEY');
+        } else {
+            throw new Exception("You should generate encryption key before encrypt.");
+        }
+
         if (File::isDirectory(base_path($filePath))) {
-            if (!File::exists(base_path($destination . $filePath))) {
+            if (!File::exists(base_path($destination.$filePath))) {
                 File::makeDirectory(base_path("$destination/$filePath"), 493, true);
             }
 
             return;
         }
-
-        File::isDirectory(dirname("$destination/$filePath")) or File::makeDirectory(dirname("$destination/$filePath"), 0755, true, true);
 
         $extension = Str::after($filePath, '.');
 
@@ -138,9 +175,9 @@ bolt_decrypt( __FILE__ , '$key'); return 0;
         if (!empty($matches[0])) {
             $fileContents = preg_replace($pattern, '', $fileContents);
         }
-        /*$cipher = bolt_encrypt('?> ' . $fileContents, $key);*/
         $cipher = bolt_encrypt($fileContents, $key);
-        File::put(base_path("$destination/$filePath"), $prepend . $cipher);
+        File::isDirectory(dirname("$destination/$filePath")) or File::makeDirectory(dirname("$destination/$filePath"), 0755, true, true);
+        File::put(base_path("$destination/$filePath"), $prepend.$cipher);
 
         unset($cipher);
         unset($fileContents);

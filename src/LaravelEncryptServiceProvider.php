@@ -21,6 +21,10 @@ class LaravelEncryptServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        // Register Config
+        $configPath = __DIR__ . '/../config/laravel-encrypter.php';
+        $this->mergeConfigFrom($configPath, 'laravel-encrypter');
+
         // Register hard-delete-expired artisan command
         $this->commands([
             LaravelEncryptCommand::class,
@@ -34,13 +38,27 @@ class LaravelEncryptServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Publish config file
-        $configPath = __DIR__.'/../config/laravel-encrypter.php';
-        if (function_exists('config_path')) {
-            $publishPath = config_path('laravel-encrypter.php');
-        } else {
-            $publishPath = base_path('config/laravel-encrypter.php');
-        }
-        $this->publishes([$configPath => $publishPath], 'config');
+        $configPath = __DIR__ . '/../config/laravel-encrypter.php';
+        $this->publishes([$configPath => $this->getConfigPath()], 'config');
+    }
+
+    /**
+     * Get the config path
+     *
+     * @return string
+     */
+    protected function getConfigPath()
+    {
+        return config_path('laravel-encrypter.php');
+    }
+
+    /**
+     * Publish the config file
+     *
+     * @param  string $configPath
+     */
+    protected function publishConfig($configPath)
+    {
+        $this->publishes([$configPath => config_path('laravel-encrypter.php')], 'config');
     }
 }
