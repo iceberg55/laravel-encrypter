@@ -57,6 +57,8 @@ class LaravelEncryptGenerateKeyCommand extends Command
                 $envContent .= "LARAVEL_ENCRYPTION_KEY=$token\n";
             }
             file_put_contents($env, $envContent);
+        } else {
+            $this->error('.env not exist !');
         }
     }
 }

@@ -58,7 +58,7 @@ class LaravelEncryptCommand extends Command
             $this->error('  Bolt Installed: ' . $output . '                          ');
             $this->error('                                               ');
 
-            //return 1;
+            return 1;
         }
 
         if ($this->option('key')) {
