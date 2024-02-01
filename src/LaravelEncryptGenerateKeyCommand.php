@@ -51,7 +51,7 @@ class LaravelEncryptGenerateKeyCommand extends Command
         if (file_exists($env)) {
             $envContent = file_get_contents($env);
             $token = bin2hex(openssl_random_pseudo_bytes($keyLength));
-            
+
             if (str_contains($envContent, 'LARAVEL_ENCRYPTION_KEY='.env('LARAVEL_ENCRYPTION_KEY'))) {
                 $envContent = str_replace('LARAVEL_ENCRYPTION_KEY='.env('LARAVEL_ENCRYPTION_KEY'), 'LARAVEL_ENCRYPTION_KEY='.$token, $envContent);
             } else {

@@ -29,12 +29,14 @@ class LaravelEncryptCommand extends Command
                 { --destination= : Destination directory }
                 { --force : Force the operation to run when destination directory already exists }
                 { --key= : Custom Encryption Key}';
+
     /**
      * The console command description.
      *
      * @var string
      */
     protected $description = 'Encrypts PHP files';
+
     protected $warned = [];
 
     /**
@@ -42,31 +44,33 @@ class LaravelEncryptCommand extends Command
      */
     public function handle()
     {
-        if (!extension_loaded('bolt')) {
-            $output = shell_exec('ls ' . ini_get('extension_dir') . ' | grep -i bolt.so');
-            if ($output === NULL) {
-                $output = "NO ";
+        if (! extension_loaded('bolt')) {
+            $output = shell_exec('ls '.ini_get('extension_dir').' | grep -i bolt.so');
+            if ($output === null) {
+                $output = "No ";
             } else {
                 $output = "Yes";
             }
 
             // Do not change spaces it all aligns perfectly when displayed
-            $this->error('                                               ');
-            $this->error('  Please install bolt.so https://phpBolt.com   ');
-            $this->error('  PHP Version '.phpversion(). '                ');
-            $this->error('  Extension dir: '.ini_get('extension_dir') .' ');
-            $this->error('  Bolt Installed: ' . $output . '              ');
-            $this->error('                                               ');
+            $this->error('                                                     ');
+            $this->error('  Please install bolt.so https://phpBolt.com         ');
+            $this->error('  PHP Version '.phpversion().'                                 ');
+            $this->error('  Extension dir: '.ini_get('extension_dir').' ');
+            $this->error('  Bolt Installed: '.$output.'                                ');
+            $this->error('                                                     ');
 
             return 1;
         }
 
         if ($this->option('key')) {
             $key = $this->option('key');
-        } else if( env('LARAVEL_ENCRYPTION_KEY') ){
-            $key = env('LARAVEL_ENCRYPTION_KEY');
         } else {
-            throw new Exception("You should generate encryption key before encrypt.");
+            if (env('LARAVEL_ENCRYPTION_KEY')) {
+                $key = env('LARAVEL_ENCRYPTION_KEY');
+            } else {
+                throw new Exception("You should generate encryption key before encrypt.");
+            }
         }
 
         if (empty($this->option('source'))) {
@@ -81,10 +85,7 @@ class LaravelEncryptCommand extends Command
             $destination = $this->option('destination');
         }
 
-        if (!$this->option('force')
-            && File::exists(base_path($destination))
-            && !$this->confirm("The directory $destination already exists. Delete directory?")
-        ) {
+        if (! $this->option('force') && File::exists(base_path($destination)) && ! $this->confirm("The directory $destination already exists. Delete directory?")) {
             $this->line('Command canceled.');
 
             return 1;
@@ -94,7 +95,7 @@ class LaravelEncryptCommand extends Command
         File::makeDirectory(base_path($destination));
 
         foreach ($sources as $source) {
-            if (!File::exists($source)) {
+            if (! File::exists($source)) {
                 $this->error("File $source does not exist.");
 
                 return 1;
@@ -114,7 +115,7 @@ class LaravelEncryptCommand extends Command
         $this->info('Encrypting Completed Successfully!');
         $this->info("Destination directory: $destination");
 
-        if( $this->confirm('Are you want to replace encrypted files with sources?') ){
+        if ($this->confirm('Are you want to replace encrypted files with sources?')) {
             $keepPath = config('laravel-encrypter.keep_path', 'old');
             File::deleteDirectory(base_path($keepPath));
             File::makeDirectory(base_path($keepPath));
@@ -136,7 +137,7 @@ class LaravelEncryptCommand extends Command
             }
             File::deleteDirectory(base_path($destination));
 
-            if( $this->confirm('Are you want to delete original sources?') ){
+            if ($this->confirm('Are you want to delete original sources?')) {
                 File::deleteDirectory(base_path($keepPath));
             }
         }
@@ -147,7 +148,7 @@ class LaravelEncryptCommand extends Command
     private function encryptFile($filePath, $destination, $key)
     {
         if (File::isDirectory(base_path($filePath))) {
-            if (!File::exists(base_path($destination.$filePath))) {
+            if (! File::exists(base_path($destination.$filePath))) {
                 File::makeDirectory(base_path("$destination/$filePath"), 493, true);
             }
 
@@ -157,7 +158,7 @@ class LaravelEncryptCommand extends Command
         $extension = Str::after($filePath, '.');
 
         if ($extension == 'blade.php' || $extension != 'php') {
-            if (!in_array($extension, $this->warned)) {
+            if (! in_array($extension, $this->warned)) {
                 $this->warn("Encryption of $extension files is not currently supported. These files will be copied without change.");
                 $this->warned[] = $extension;
             }
@@ -168,8 +169,9 @@ class LaravelEncryptCommand extends Command
 
         $fileContents = File::get(base_path($filePath));
 
-        if( str_contains($fileContents, 'bolt_decrypt( __FILE__ ,') ){
+        if (str_contains($fileContents, 'bolt_decrypt( __FILE__ ,')) {
             $this->warn("File $filePath is necrypted before.");
+
             return;
         }
 
@@ -178,7 +180,7 @@ bolt_decrypt( __FILE__ , '$key'); return 0;
 ##!!!##";
         $pattern = '/\<\?php/m';
         preg_match($pattern, $fileContents, $matches);
-        if (!empty($matches[0])) {
+        if (! empty($matches[0])) {
             $fileContents = preg_replace($pattern, '', $fileContents);
         }
         //$cipher = bolt_encrypt($fileContents, $key);
