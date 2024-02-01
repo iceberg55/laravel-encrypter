@@ -53,9 +53,9 @@ class LaravelEncryptCommand extends Command
             // Do not change spaces it all aligns perfectly when displayed
             $this->error('                                               ');
             $this->error('  Please install bolt.so https://phpBolt.com   ');
-            $this->error('  PHP Version '.phpversion(). '                            ');
-            $this->error('  Extension dir: '.ini_get('extension_dir') .'         ');
-            $this->error('  Bolt Installed: ' . $output . '                          ');
+            $this->error('  PHP Version '.phpversion(). '                ');
+            $this->error('  Extension dir: '.ini_get('extension_dir') .' ');
+            $this->error('  Bolt Installed: ' . $output . '              ');
             $this->error('                                               ');
 
             return 1;
