@@ -10,6 +10,7 @@
 
 namespace ibf\LaravelEncrypter;
 
+use ibf\LaravelEncrypter\Facades\Obfuscator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -44,35 +45,6 @@ class LaravelEncryptCommand extends Command
      */
     public function handle()
     {
-        if (! extension_loaded('bolt')) {
-            $output = shell_exec('ls '.ini_get('extension_dir').' | grep -i bolt.so');
-            if ($output === null) {
-                $output = "No ";
-            } else {
-                $output = "Yes";
-            }
-
-            // Do not change spaces it all aligns perfectly when displayed
-            $this->error('                                                     ');
-            $this->error('  Please install bolt.so https://phpBolt.com         ');
-            $this->error('  PHP Version '.phpversion().'                                 ');
-            $this->error('  Extension dir: '.ini_get('extension_dir').' ');
-            $this->error('  Bolt Installed: '.$output.'                                ');
-            $this->error('                                                     ');
-
-            return 1;
-        }
-
-        if ($this->option('key')) {
-            $key = $this->option('key');
-        } else {
-            if (env('LARAVEL_ENCRYPTION_KEY')) {
-                $key = env('LARAVEL_ENCRYPTION_KEY');
-            } else {
-                throw new Exception("You should generate encryption key before encrypt.");
-            }
-        }
-
         if (empty($this->option('source'))) {
             $sources = config('laravel-encrypter.source', ['app', 'database', 'routes']);
         } else {
@@ -103,13 +75,13 @@ class LaravelEncryptCommand extends Command
 
             @File::makeDirectory($destination.'/'.File::dirname($source), 493, true);
             if (File::isFile($source)) {
-                self::encryptFile($source, $destination, $key);
+                self::encryptFile($source, $destination);
                 continue;
             }
             $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path($source)));
             foreach ($files as $file) {
                 $filePath = Str::replaceFirst(base_path(), '', $file->getRealPath());
-                self::encryptFile($filePath, $destination, $key);
+                self::encryptFile($filePath, $destination);
             }
         }
         $this->info('Encrypting Completed Successfully!');
@@ -122,6 +94,7 @@ class LaravelEncryptCommand extends Command
 
             foreach ($sources as $source) {
                 if (File::isDirectory(base_path($source))) {
+                    File::makeDirectory(base_path("$keepPath/$source"), 0755, true);
                     File::moveDirectory(base_path($source), base_path("$keepPath/$source"));
                 } else {
                     File::move(base_path($source), base_path("$keepPath/$source"));
@@ -145,7 +118,7 @@ class LaravelEncryptCommand extends Command
         return 0;
     }
 
-    private function encryptFile($filePath, $destination, $key)
+    private function encryptFile($filePath, $destination)
     {
         if (File::isDirectory(base_path($filePath))) {
             if (! File::exists(base_path($destination.$filePath))) {
@@ -167,28 +140,6 @@ class LaravelEncryptCommand extends Command
             return;
         }
 
-        $fileContents = File::get(base_path($filePath));
-
-        if (str_contains($fileContents, 'bolt_decrypt( __FILE__ ,')) {
-            $this->warn("File $filePath is necrypted before.");
-
-            return;
-        }
-
-        $prepend = "<?php
-bolt_decrypt( __FILE__ , '$key'); return 0;
-##!!!##";
-        $pattern = '/\<\?php/m';
-        preg_match($pattern, $fileContents, $matches);
-        if (! empty($matches[0])) {
-            $fileContents = preg_replace($pattern, '', $fileContents);
-        }
-        //$cipher = bolt_encrypt($fileContents, $key);
-        $cipher = 111;
-        File::isDirectory(dirname("$destination/$filePath")) or File::makeDirectory(dirname("$destination/$filePath"), 0755, true, true);
-        File::put(base_path("$destination/$filePath"), $prepend.$cipher);
-
-        unset($cipher);
-        unset($fileContents);
+        Obfuscator::obfuscateFileFromTo(base_path($filePath), base_path("$destination/$filePath"));
     }
 }

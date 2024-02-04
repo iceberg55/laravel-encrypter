@@ -7,15 +7,13 @@
     "encrypt",
     "encryption",
     "encrypter",
-    "encryptor",
-    "phpBolt"
+    "encryptor"
   ],
   "type": "library",
   "require": {
-    "php": ">=7.2.5",
+    "php": ">=8.0",
     "illuminate/console": "^6|^7|^8|^9|^10",
-    "illuminate/support": "^6|^7|^8|^9|^10",
-    "ext-bolt": "*"
+    "illuminate/support": "^6|^7|^8|^9|^10"
   },
   "description": "Laravel Encrypter",
   "license": "MIT",
