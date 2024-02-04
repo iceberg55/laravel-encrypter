@@ -28,8 +28,7 @@ class LaravelEncryptCommand extends Command
     protected $signature = 'ibf-encrypt
                 { --source= : Path(s) to encrypt }
                 { --destination= : Destination directory }
-                { --force : Force the operation to run when destination directory already exists }
-                { --key= : Custom Encryption Key}';
+                { --force : Force the operation to run when destination directory already exists }';
 
     /**
      * The console command description.
@@ -93,8 +92,8 @@ class LaravelEncryptCommand extends Command
             File::makeDirectory(base_path($keepPath));
 
             foreach ($sources as $source) {
+                @File::makeDirectory($keepPath.'/'.File::dirname($source), 493, true);
                 if (File::isDirectory(base_path($source))) {
-                    File::makeDirectory(base_path("$keepPath/$source"), 0755, true);
                     File::moveDirectory(base_path($source), base_path("$keepPath/$source"));
                 } else {
                     File::move(base_path($source), base_path("$keepPath/$source"));
